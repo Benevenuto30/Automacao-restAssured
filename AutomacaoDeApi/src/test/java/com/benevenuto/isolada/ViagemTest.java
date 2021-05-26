@@ -1,5 +1,9 @@
 package com.benevenuto.isolada;
 
+import com.benevenuto.factory.UsuarioDataFactory;
+import com.benevenuto.factory.ViagemDataFactory;
+import com.benevenuto.pojo.Usuario;
+import com.benevenuto.pojo.Viagem;
 import io.restassured.http.ContentType;
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,12 +20,11 @@ public class ViagemTest {
         port = 8089;
         basePath = "/api";
 
+        Usuario usuarioAdministrador = UsuarioDataFactory.criarUsuarioAdministrador();
+
         String token = given()
                 .contentType(ContentType.JSON)
-                .body("{\n" +
-                        "  \"email\": \"admin@email.com\",\n" +
-                        "  \"senha\": \"654321\"\n" +
-                        "}")
+                .body(usuarioAdministrador)
                 .when()
                 .post("/v1/auth")
                 .then()
@@ -29,20 +32,17 @@ public class ViagemTest {
                 .all()
                 .extract()
                 .path("data.token");
+
+       Viagem viagem = ViagemDataFactory.criarViagem();
+
         given()
                 .contentType(ContentType.JSON)
-                .body("{\n" +
-                        "  \"acompanhante\": \"Isabela\",\n" +
-                        "  \"dataPartida\": \"2021-05-10\",\n" +
-                        "  \"dataRetorno\": \"2021-05-14\",\n" +
-                        "  \"localDeDestino\": \"Lapinha da Serra\",\n" +
-                        "  \"regiao\": \"Central\"\n" +
-                        "}")
+                .body(viagem)
                 .header("Authorization", token)
                 .when()
                 .post("/v1/viagens")
                 .then()
-                .assertThat().statusCode(201).body("data.localDeDestino",equalToIgnoringCase("Lapinha da Serra"));
+                .assertThat().statusCode(201).body("data.localDeDestino",equalToIgnoringCase("Santana do Riacho"));
 
 
     }
