@@ -6,15 +6,22 @@ import com.benevenuto.pojo.Usuario;
 import com.benevenuto.pojo.Viagem;
 import io.restassured.http.ContentType;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+
 import static io.restassured.RestAssured.*;
 import static io.restassured.matcher.RestAssuredMatchers.*;
 import static org.hamcrest.Matchers.*;
 
 
 public class ViagemTest {
-    @Test
-    public void testCadastroDeViagemValidaRetornaSucesso(){
+
+    private String token;
+
+    @Before
+    public void setup(){
         //configurações rest assured
         baseURI = "http://localhost";
         port = 8089;
@@ -22,28 +29,45 @@ public class ViagemTest {
 
         Usuario usuarioAdministrador = UsuarioDataFactory.criarUsuarioAdministrador();
 
-        String token = given()
+        this.token = given()
                 .contentType(ContentType.JSON)
                 .body(usuarioAdministrador)
-                .when()
+            .when()
                 .post("/v1/auth")
-                .then()
+            .then()
                 .log()
-                .all()
+                    .all()
                 .extract()
                 .path("data.token");
+    }
 
+    @Test
+    public void testCadastroDeViagemValidaRetornaSucesso() throws IOException {
        Viagem viagem = ViagemDataFactory.criarViagem();
 
         given()
                 .contentType(ContentType.JSON)
                 .body(viagem)
                 .header("Authorization", token)
-                .when()
+        .when()
                 .post("/v1/viagens")
-                .then()
+        .then()
                 .assertThat().statusCode(201).body("data.localDeDestino",equalToIgnoringCase("Santana do Riacho"));
-
+    }
+    @Test
+    public void testCadastroDeViagemSemLocalDestino() throws IOException {
+        Viagem viagem = ViagemDataFactory.criarViagemSemLocalDestino();
+        given()
+                .contentType(ContentType.JSON)
+                .body(viagem)
+                .header("Authorization", token)
+        .when()
+                .post("/v1/viagens")
+        .then()
+                .log()
+                    .all()
+                .assertThat().statusCode(400)
+                             .body("errors[0].defaultMessage",equalTo("Local de Destino deve estar entre 3 e 40 caracteres"));
 
     }
 }
