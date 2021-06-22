@@ -5,15 +5,13 @@ import com.benevenuto.factory.ViagemDataFactory;
 import com.benevenuto.pojo.Usuario;
 import com.benevenuto.pojo.Viagem;
 import io.restassured.http.ContentType;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
 import java.io.IOException;
-
 import static io.restassured.RestAssured.*;
 import static io.restassured.matcher.RestAssuredMatchers.*;
 import static org.hamcrest.Matchers.*;
+import static io.restassured.module.jsv.JsonSchemaValidator.*;
 
 
 public class ViagemTest {
@@ -35,8 +33,6 @@ public class ViagemTest {
             .when()
                 .post("/v1/auth")
             .then()
-                .log()
-                    .all()
                 .extract()
                 .path("data.token");
     }
@@ -52,8 +48,23 @@ public class ViagemTest {
         .when()
                 .post("/v1/viagens")
         .then()
-                .assertThat().statusCode(201).body("data.localDeDestino",equalToIgnoringCase("Santana do Riacho"));
+            .assertThat().statusCode(201).body("data.localDeDestino",equalToIgnoringCase("Santana do Riacho"));
     }
+
+    @Test
+    public void testCadastroDeViagemValidaContrato() throws IOException {
+        Viagem viagem = ViagemDataFactory.criarViagem();
+
+        given()
+            .contentType(ContentType.JSON)
+            .body(viagem)
+            .header("Authorization", token)
+        .when()
+            .post("/v1/viagens")
+        .then()
+            .assertThat().statusCode(201).body(matchesJsonSchemaInClasspath("schemas/postV1ViagensViagemValida.json"));
+    }
+
     @Test
     public void testCadastroDeViagemSemLocalDestino() throws IOException {
         Viagem viagem = ViagemDataFactory.criarViagemSemLocalDestino();
