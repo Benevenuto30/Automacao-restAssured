@@ -19,7 +19,7 @@ public class ViagemContractTest {
     private String token;
 
     @Before
-    public void setup(){
+    public void setup() {
         //configurações rest assured
         Settings settings = ConfigFactory.create(Settings.class);
 
@@ -32,9 +32,9 @@ public class ViagemContractTest {
         this.token = given()
                 .contentType(ContentType.JSON)
                 .body(usuarioAdministrador)
-            .when()
+                .when()
                 .post("/v1/auth")
-            .then()
+                .then()
                 .extract()
                 .path("data.token");
     }

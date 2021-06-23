@@ -17,6 +17,7 @@ import static io.restassured.module.jsv.JsonSchemaValidator.*;
 public class ViagemTest {
 
     private String token;
+    private String tokenUsuarioComum;
 
     @Before
     public void setup(){
@@ -35,6 +36,18 @@ public class ViagemTest {
             .then()
                 .extract()
                 .path("data.token");
+
+        Usuario usuarioComum = UsuarioDataFactory.criarUsuarioComum();
+
+        this.tokenUsuarioComum = given()
+                .contentType(ContentType.JSON)
+                .body(usuarioComum)
+            .when()
+                .post("/v1/auth")
+            .then()
+                .extract()
+                .path("data.token");
+
     }
 
     @Test
@@ -80,5 +93,27 @@ public class ViagemTest {
                 .assertThat().statusCode(400)
                              .body("errors[0].defaultMessage",equalTo("Local de Destino deve estar entre 3 e 40 caracteres"));
 
+    }
+
+    @Test
+    public void testConsultaViagem(){
+        given()
+                .header("Authorization", tokenUsuarioComum)
+            .when()
+                .get("/v1/viagens/1")
+            .then()
+                .assertThat().statusCode(200)
+                .body("data.acompanhante", equalTo("Isabela"));
+    }
+
+    @Test
+    public void testProcessaCorretamenteRetornoDaApiDoTempo(){
+        given()
+                .header("Authorization", tokenUsuarioComum)
+            .when()
+                .get("/v1/viagens/1")
+            .then()
+                .assertThat().statusCode(200)
+                .body("data.temperatura", equalTo(20f));
     }
 }
